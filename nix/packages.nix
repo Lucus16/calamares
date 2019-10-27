@@ -1,5 +1,5 @@
 { writeScriptBin, ckbcomp, makeWrapper, callPackage, calamares, runCommandNoCC
-, lib, glibc, xlibs, utillinux, writeText }:
+, lib, glibc, xlibs, utillinux, writeText, os-prober }:
 
 let
   config = writeText "settings.conf" (builtins.toJSON {
@@ -43,7 +43,7 @@ let
     cp -r ${../src/branding/default} $out/branding/default
   '';
 
-  path = lib.makeBinPath [ utillinux ckbcomp glibc ];
+  path = lib.makeBinPath [ utillinux ckbcomp glibc os-prober ];
 
 in {
   calamaresWithConfig =

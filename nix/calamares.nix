@@ -20,7 +20,7 @@ mkDerivation rec {
     qtquickcontrols qtsvg qttools qtwebengine.dev utillinux
   ];
 
-  enableParallelBuilding = false;
+  enableParallelBuilding = true;
 
   cmakeFlags = [
     "-DPYTHON_LIBRARY=${python}/lib/lib${python.libPrefix}m.so"
@@ -45,7 +45,7 @@ mkDerivation rec {
         -i src/modules/locale/timezonewidget/localeconst.h
 
     sed -e 's,/usr/share/X11/xkb/rules/base.lst,${xkeyboard_config}/share/X11/xkb/rules/base.lst,' \
-        -i src/modules/keyboard/keyboardwidget/keyboardglobal.h
+        -i src/modules/keyboard/keyboardwidget/keyboardglobal.cpp
 
     sed -e 's,"ckbcomp","${ckbcomp}/bin/ckbcomp",' \
         -i src/modules/keyboard/keyboardwidget/keyboardpreview.cpp

@@ -23,11 +23,11 @@ mkDerivation rec {
   enableParallelBuilding = false;
 
   cmakeFlags = [
-    "-DPYTHON_LIBRARY=${python}/lib/lib${python.libPrefix}.so"
+    "-DPYTHON_LIBRARY=${python}/lib/lib${python.libPrefix}m.so"
     "-DPYTHON_INCLUDE_DIR=${python}/include/${python.libPrefix}"
     "-DCMAKE_VERBOSE_MAKEFILE=True"
     "-DCMAKE_BUILD_TYPE=Release"
-    "-DWITH_PYTHONQT:BOOL=ON"
+    "-DWITH_PARTITIONMANAGER=1"
   ];
 
   POLKITQT-1_POLICY_FILES_INSTALL_DIR = "$(out)/share/polkit-1/actions";

@@ -5,7 +5,7 @@ with
         packages = self.callPackages ./packages.nix { inherit (self) calamares; };
         calamares = self.libsForQt5.callPackage ./calamares.nix {
           python = self.python3;
-          boost = self.boost.override { python = self.python3; };
+          boost = self.boost.override { enablePython = true; python = self.python3; };
         };
       };
   };

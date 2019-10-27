@@ -1,7 +1,13 @@
-{ writeScriptBin, ckbcomp, makeWrapper, callPackage, calamares, runCommandNoCC
-, lib, glibc, xlibs, utillinux, writeText, os-prober }:
+{ writeScriptBin, makeWrapper, callPackage, calamares, runCommandNoCC
+, lib, xlibs, writeText
+
+# For PATH
+, utillinux, ckbcomp, glibc, lvm2, os-prober, e2fsprogs
+}:
 
 let
+  path = lib.makeBinPath [ utillinux ckbcomp glibc lvm2 os-prober e2fsprogs ];
+
   config = writeText "settings.conf" (builtins.toJSON {
     modules-search = [ "local" ../src/modules ];
     sequence = [
@@ -42,8 +48,6 @@ let
     cp ${partition-config} $out/modules/partition.conf
     cp -r ${../src/branding/default} $out/branding/default
   '';
-
-  path = lib.makeBinPath [ utillinux ckbcomp glibc os-prober ];
 
 in {
   calamaresWithConfig =

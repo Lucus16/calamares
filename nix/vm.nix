@@ -65,7 +65,4 @@
   };
 
   virtualisation.memorySize = 2048;
-  virtualisation.emptyDiskImages = [
-    5000
-  ];
 }

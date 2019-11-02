@@ -82,13 +82,6 @@ def run():
         libcalamares.utils.debug("{} => {}\n".format(str(key), str(value)))
         store[str(key)] = str(value)
 
-    store["password"] = libcalamares.utils.obscure(gs.value("password"))
-
-    subprocess.run(["mkpasswd", "-m", "sha-512", "-s"],
-                   input=libcalamares.utils.obscure(gs.value("password")),
-                   encoding='ascii',
-                   check=True)
-
     root = store["rootMountPoint"]
 
     # libcalamares.job.setprogress( 0.3 )
@@ -182,5 +175,14 @@ def configuration_nix(gs):
         default_locale=gs.value("localeConf")["LANG"],
         region=gs.value("locationRegion"),
         zone=gs.value("locationZone"),
-        hashed_pass=gs.value("password"),
+        hashed_pass=password_hash(gs),
         user=gs.value("username"))
+
+
+def password_hash(gs):
+    return subprocess.run(["mkpasswd", "-m", "sha-512", "-s"],
+                          input=libcalamares.utils.obscure(
+                              gs.value("password")),
+                          encoding='ascii',
+                          check=True,
+                          stdout=subprocess.PIPE).stdout.strip()

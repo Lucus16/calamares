@@ -1,6 +1,6 @@
 { writeScriptBin, ckbcomp, makeWrapper, callPackage, calamares, runCommandNoCC
 , lib, glibc, xlibs, utillinux, writeText, os-prober, lvm2, writeShellScriptBin
-, systemd, xfsprogs, e2fsprogs, coreutils }:
+, systemd, xfsprogs, e2fsprogs, coreutils, mkpasswd }:
 let
   path = lib.makeBinPath [
     ckbcomp
@@ -12,6 +12,8 @@ let
     udevsettle
     utillinux
     xfsprogs
+    mkpasswd
+    "/run/current-system/sw"
   ];
 
   config = writeText "settings.conf" (builtins.toJSON {
@@ -20,7 +22,7 @@ let
       {
         show = [ "welcome" "partition" "locale" "keyboard" "users" "summary" ];
       }
-      { exec = [ "partition" "mount" "os-nixos" ]; }
+      { exec = [ "partition" "mount" "os-nixos" "umount" ]; }
       { show = [ "finished" ]; }
     ];
     branding = "nixos";
@@ -31,8 +33,9 @@ let
     disable-cancel-during-exec = false;
   });
 
-  brandingDesc = writeText "branding.desc" (builtins.toJSON {
+  branding-desc = writeText "branding.desc" (builtins.toJSON {
     componentName = "nixos";
+
     images = {
       productIcon = "nixos.png";
       productLogo = "nixos.png";
@@ -80,16 +83,22 @@ let
     };
   });
 
+  umount-config = writeText "umount.conf" (builtins.toJSON {
+    srcLog = "/root/.cache/calamares/session.log";
+    destLog = "/var/log/Calamares.log";
+  });
+
   configDir = runCommandNoCC "calamares-config" { } ''
     mkdir -p $out/modules $out/qml $out/branding/nixos
     cp ${config} $out/settings.conf
-    cp ${welcome-config} $out/modules/welcome.conf
-    cp ${keyboard-config} $out/modules/keyboard.conf
+    cp ${welcome-config}   $out/modules/welcome.conf
+    cp ${keyboard-config}  $out/modules/keyboard.conf
     cp ${partition-config} $out/modules/partition.conf
-    cp ${brandingDesc} $out/branding/nixos/branding.desc
-    cp ${./calamares/nixos.png} $out/branding/nixos/nixos.png
+    cp ${umount-config}    $out/modules/umount.conf
+    cp ${branding-desc}             $out/branding/nixos/branding.desc
+    cp ${./calamares/nixos.png}     $out/branding/nixos/nixos.png
     cp ${./calamares/languages.png} $out/branding/nixos/languages.png
-    cp ${./calamares/show.qml} $out/branding/nixos/show.qml
+    cp ${./calamares/show.qml}      $out/branding/nixos/show.qml
   '';
 
   udevsettle = writeShellScriptBin "udevsettle" ''

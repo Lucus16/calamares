@@ -1,5 +1,5 @@
 { pkgs, config, lib, ... }: {
-  # networking.hostName = "nixos-installer";
+  networking.hostName = "nixos-installer";
 
   users = {
     extraUsers.root.initialHashedPassword = "";
@@ -46,19 +46,14 @@
       xterm.enable = false;
     };
 
+    resolutions = lib.mkOverride 9 [ { x = 1680; y = 1050; } ];
+
     windowManager.i3 = {
       enable = true;
       extraPackages = with pkgs; [ dmenu i3status ];
       configFile = pkgs.writeText "i3.config" ''
-        exec_always xeyes
-        exec_always xterm
-        exec_always calamares
+        exec --no-startup-id calamares -d > /installation.log
         bindsym Mod1+Return exec ${pkgs.xterm}/bin/xterm
-        bindsym Mod2+Return exec ${pkgs.xterm}/bin/xterm
-        bindsym Mod3+Return exec ${pkgs.xterm}/bin/xterm
-        bindsym Mod4+Return exec ${pkgs.xterm}/bin/xterm
-        bindsym Mod5+Return exec ${pkgs.xterm}/bin/xterm
-        bindsym Mod6+Return exec ${pkgs.xterm}/bin/xterm
       '';
     };
 
@@ -68,4 +63,9 @@
     };
     displayManager.lightdm.enable = true;
   };
+
+  virtualisation.memorySize = 2048;
+  virtualisation.emptyDiskImages = [
+    5000
+  ];
 }

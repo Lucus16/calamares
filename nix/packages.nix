@@ -88,28 +88,76 @@ let
     destLog = "/var/log/Calamares.log";
   });
 
+  packagechooser-config = writeText "packagechooser.conf" (builtins.toJSON {
+    labels = { step = "Packages"; };
+
+    id = "desktopmanager";
+    mode = "optional";
+
+    items = [
+      {
+        id = "";
+        package = "";
+        name = "No Desktop";
+        description = ''
+          Please pick a desktop environment from the list.
+          If you don't want to install a desktop, that's fine, your system will start up in text-only mode and you can install a desktop environment later.
+        '';
+        screenshot = ":/images/no-selection.png";
+      }
+      {
+        id = "";
+        package = "deepin";
+        name = "Deepin";
+        description = ''
+        '';
+        screenshot = ":/images/no-selection.png";
+      }
+      {
+        id = "kde";
+        package = "kde";
+        name = "Plasma Desktop";
+        description = ''
+          KDE Plasma Desktop, simple by default, a clean work area for real-world usage which intends to stay out of your way. Plasma is powerful when needed, enabling the user to create the workflow that makes them more effective to complete their tasks.
+                '';
+        screenshot = ":/images/kde.png";
+      }
+      {
+        id = "gnome";
+        package = "kde";
+        name = "Plasma Desktop";
+        description = ''
+          KDE Plasma Desktop, simple by default, a clean work area for real-world usage which intends to stay out of your way. Plasma is powerful when needed, enabling the user to create the workflow that makes them more effective to complete their tasks.
+                '';
+        screenshot = ":/images/kde.png";
+      }
+
+    ];
+  });
+
   configDir = runCommandNoCC "calamares-config" { } ''
     mkdir -p $out/modules $out/qml $out/branding/nixos
     cp ${config} $out/settings.conf
-    cp ${welcome-config}   $out/modules/welcome.conf
-    cp ${keyboard-config}  $out/modules/keyboard.conf
+    cp ${welcome-config} $out/modules/welcome.conf
+    cp ${keyboard-config} $out/modules/keyboard.conf
     cp ${partition-config} $out/modules/partition.conf
-    cp ${umount-config}    $out/modules/umount.conf
-    cp ${branding-desc}             $out/branding/nixos/branding.desc
-    cp ${./calamares/nixos.png}     $out/branding/nixos/nixos.png
+    cp ${umount-config} $out/modules/umount.conf
+    cp ${packagechooser-config} $out/modules/packagechooser.conf
+    cp ${branding-desc} $out/branding/nixos/branding.desc
+    cp ${./calamares/nixos.png} $out/branding/nixos/nixos.png
     cp ${./calamares/languages.png} $out/branding/nixos/languages.png
-    cp ${./calamares/show.qml}      $out/branding/nixos/show.qml
+    cp ${./calamares/show.qml} $out/branding/nixos/show.qml
   '';
 
   udevsettle = writeShellScriptBin "udevsettle" ''
     ${systemd}/bin/udevadm settle $@
   '';
-
 in {
   calamaresWithConfig =
     runCommandNoCC "calamares" { buildInputs = [ makeWrapper ]; } ''
       cp -r ${calamares} $out
       chmod -R u+w $out
+      sed -i "s!^Exec=.*!Exec=pkexec $out/bin/calamares!" "$out/share/applications/calamares.desktop"
       wrapProgram $out/bin/calamares \
         --set PATH ${path} \
         --add-flags -c \

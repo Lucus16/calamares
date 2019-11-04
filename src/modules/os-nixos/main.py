@@ -171,7 +171,7 @@ def configuration_nix(gs):
                 initialHashedPassword = "${hashed_pass}";
             };
 
-            users.users.root.initialHashedPassword = "${hashed_pass}";
+            users.users.root.initialHashedPassword = "${hashed_root_pass}";
 
             system.stateVersion = "19.09";
         }
@@ -184,15 +184,15 @@ def configuration_nix(gs):
         default_locale=gs.value("localeConf")["LANG"],
         region=gs.value("locationRegion"),
         zone=gs.value("locationZone"),
-        hashed_pass=password_hash(gs),
+        hashed_pass=password_hash(gs.value("password")),
+        hashed_root_pass=password_hash(gs.value("rootPassword")),
         user=gs.value("username")
     )
 
 
-def password_hash(gs):
+def password_hash(pw):
     return subprocess.run(["mkpasswd", "-m", "sha-512", "-s"],
-                          input=libcalamares.utils.obscure(
-                              gs.value("password")),
+                          input=libcalamares.utils.obscure(pw),
                           encoding='ascii',
                           check=True,
                           stdout=subprocess.PIPE).stdout.strip()

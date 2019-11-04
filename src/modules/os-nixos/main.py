@@ -151,10 +151,19 @@ def configuration_nix(gs):
 
             sound.enable = true;
             hardware.pulseaudio.enable = true;
-            # services.xserver.enable = true;
-            # services.xserver.displayManager.sddm.enable = true;
-            # services.xserver.desktopManager.plasma5.enable = true;
-            # services.xserver.libinput.enable = true;
+
+            services.xserver = {
+              enable = ${enable_x};
+              desktopManager.xterm.enable = false;
+              desktopManager.plasma5.enable = ${enable_plasma5};
+              desktopManager.xfce.enable = ${enable_xfce};
+              desktopManager.gnome3.enable = ${enable_gnome3};
+              desktopManager.mate.enable = ${enable_mate};
+              windowManager.xmonad.enable = ${enable_xmonad};
+              windowManager.twm.enable = ${enable_twm};
+              windowManager.icewm.enable = ${enable_icewm};
+              windowManager.i3.enable = ${enable_i3};
+            };
 
             users.users.${user} = {
                 isNormalUser = true;
@@ -176,7 +185,8 @@ def configuration_nix(gs):
         region=gs.value("locationRegion"),
         zone=gs.value("locationZone"),
         hashed_pass=password_hash(gs),
-        user=gs.value("username"))
+        user=gs.value("username")
+    )
 
 
 def password_hash(gs):

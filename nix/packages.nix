@@ -2,6 +2,8 @@
 , lib, glibc, xlibs, utillinux, writeText, os-prober, lvm2, writeShellScriptBin
 , systemd, xfsprogs, e2fsprogs, coreutils, mkpasswd }:
 let
+  development = true;
+
   path = lib.makeBinPath [
     ckbcomp
     coreutils
@@ -18,13 +20,48 @@ let
 
   config = writeText "settings.conf" (builtins.toJSON {
     modules-search = [ "local" ../src/modules ];
-    sequence = [
+
+    instances = [
       {
-        show = [ "welcome" "partition" "locale" "keyboard" "users" "summary" ];
+        id = "desktopmanager";
+        module = "packagechooser";
+        config = "desktopmanager.conf";
+      }
+      {
+        id = "package";
+        module = "packagechooser";
+        config = "package.conf";
+      }
+    ];
+
+    sequence = if development then [
+      {
+        show = [
+          "welcome"
+          "packagechooser@desktopmanager"
+          "packagechooser@package"
+          "summary"
+        ];
+      }
+      { exec = [ ]; }
+      { show = [ "finished" ]; }
+    ] else [
+      {
+        show = [
+          "welcome"
+          "partition"
+          "locale"
+          "keyboard"
+          "users"
+          "packagechooser@desktopmanager"
+          "packagechooser@package"
+          "summary"
+        ];
       }
       { exec = [ "partition" "mount" "os-nixos" "umount" ]; }
       { show = [ "finished" ]; }
     ];
+
     branding = "nixos";
     prompt-install = false;
     dont-chroot = false;
@@ -49,7 +86,7 @@ let
       productName = "NixOS";
       productUrl = "https://nixos.org/";
       releaseNotesUrl =
-        "https://nixos.org/nixos/manual/release-notes.html#sec-release-@nixosRelease@";
+        "https://nixos.org/nixos/manual/release-notes.html#sec-release-${release}";
       shortProductName = "NixOS";
       shortVersion = release;
       shortVersionedName = "NixOS ${release}";
@@ -75,11 +112,15 @@ let
   partition-config = writeText "partition.conf" (builtins.toJSON { });
 
   welcome-config = writeText "welcome.conf" (builtins.toJSON {
+    showSupportUrl = true;
+    showKnownIssuesUrl = true;
+    showReleaseNotesUrl = true;
     requirements = {
       requiredStorage = 4;
-      requiredRam = 0.5;
-      check = [ ];
-      required = [ ];
+      requiredRam = 2;
+      internetCheckUrl = "http://example.com";
+      check = [ "storage" "ram" "power" "internet" "root" "screen" ];
+      required = [ "storage" "ram" "internet" "screen" "root" "power" ];
     };
   });
 
@@ -88,8 +129,38 @@ let
     destLog = "/var/log/Calamares.log";
   });
 
-  packagechooser-config = writeText "packagechooser.conf" (builtins.toJSON {
+  package-config = writeText "windowmanager.conf" (builtins.toJSON {
     labels = { step = "Packages"; };
+
+    id = "packages";
+    mode = "optionalmultiple";
+
+    items = [
+      {
+        id = "bluetooth";
+        package = "bluetooth";
+        name = "Bluetooth";
+        description = ''
+          Please pick a desktop environment from the list.
+          If you don't want to install a desktop, that's fine, your system will start up in text-only mode and you can install a desktop environment later.
+        '';
+        screenshot = ":/images/no-selection.png";
+      }
+      {
+        id = "printing";
+        package = "printing";
+        name = "Printing Support";
+        description = ''
+          Please pick a desktop environment from the list.
+          If you don't want to install a desktop, that's fine, your system will start up in text-only mode and you can install a desktop environment later.
+        '';
+        screenshot = ":/images/no-selection.png";
+      }
+    ];
+  });
+
+  desktopmanager-config = writeText "desktopmanager.conf" (builtins.toJSON {
+    labels = { step = "Desktop"; };
 
     id = "desktopmanager";
     mode = "optional";
@@ -109,29 +180,102 @@ let
         id = "";
         package = "deepin";
         name = "Deepin";
-        description = ''
-        '';
+        description = "";
         screenshot = ":/images/no-selection.png";
       }
       {
         id = "kde";
         package = "kde";
-        name = "Plasma Desktop";
+        name = "Plasma";
         description = ''
           KDE Plasma Desktop, simple by default, a clean work area for real-world usage which intends to stay out of your way. Plasma is powerful when needed, enabling the user to create the workflow that makes them more effective to complete their tasks.
                 '';
         screenshot = ":/images/kde.png";
       }
       {
-        id = "gnome";
-        package = "kde";
-        name = "Plasma Desktop";
+        id = "xfce";
+        package = "xfce";
+        name = "XFCE";
         description = ''
-          KDE Plasma Desktop, simple by default, a clean work area for real-world usage which intends to stay out of your way. Plasma is powerful when needed, enabling the user to create the workflow that makes them more effective to complete their tasks.
-                '';
+          Xfce is a lightweight desktop environment for UNIX-like operating
+          systems. It aims to be fast and low on system resources, while still
+          being visually appealing and user friendly.
+        '';
+        screenshot = ":/images/xfce.png";
+      }
+      {
+        id = "mate";
+        package = "mate";
+        name = "MATE";
+        description = ''
+          The MATE Desktop Environment is the continuation of GNOME 2. It
+          provides an intuitive and attractive desktop environment using
+          traditional metaphors for Linux and other Unix-like operating systems.
+        '';
         screenshot = ":/images/kde.png";
       }
+      {
+        id = "xmoand";
+        package = "xmonad";
+        name = "xmonad";
+        description = ''
+          Xmonad is a dynamically tiling X11 window manager that is written and
+          configured in Haskell. In a normal WM, you spend half your time
+          aligning and searching for windows. xmonad makes work easier, by
+          automating this.
+        '';
+        screenshot = ":/images/kde.png";
+      }
+      {
+        id = "twm";
+        package = "twm";
+        name = "TWM";
+        description = ''
+          Twm (Tab Window Manager, or sometimes Tom's Window Manager, after the principal
+          author Tom LaStrange) provides titlebars, shaped windows, several forms of icon
+          management, user-defined macro functions, click-to-type and pointer-driven
+          keyboard focus, and user-specified key and pointer button bindings.
+        '';
+        screenshot = ":/images/kde.png";
+      }
+      {
+        id = "icewm";
+        package = "icewm";
+        name = "IceWM";
+        description = ''
+          IceWM is a window manager for the X Window System. The goal of IceWM
+          is speed, simplicity, and not getting in the user's way. It comes with
+          a taskbar with pager, global and per-window keybindings and a dynamic
+          menu system. Application windows can be managed by keyboard and mouse.
+          Windows can be iconified to the taskbar, to the tray, to the desktop
+          or be made hidden. They are controllable by a quick switch window
+          (Alt+Tab) and in a window list. A handful of configurable focus models
+          are menu-selectable. Setups with multiple monitors are supported by
+          RandR and Xinerama. IceWM is very configurable, themable and well
+          documented. It includes an optional external background wallpaper
+          manager with transparency support, a simple session manager and a
+          system tray.
+        '';
+        screenshot = ":/images/kde.png";
+      }
+      {
+        id = "i3";
+        package = "i3";
+        name = "i3";
+        description = ''
+          i3 is a tiling window manager designed for X11, inspired by wmii. It
+          supports tiling, stacking, and tabbing layouts, which it handles
+          dynamically. Configuration is achieved via plain text file and
+          extending i3 is possible using its Unix domain socket and JSON based
+          IPC interface from many programming languages.
 
+          i3 uses a control system very similar to vi. By default, window focus
+          is controlled by the 'Mod1' (Alt key/Win key) plus the right hand home
+          row keys (Mod1+J,K,L,;), while window movement is controlled by the
+          addition of the Shift key (Mod1+Shift+J,K,L,;).
+        '';
+        screenshot = ":/images/kde.png";
+      }
     ];
   });
 
@@ -142,7 +286,8 @@ let
     cp ${keyboard-config} $out/modules/keyboard.conf
     cp ${partition-config} $out/modules/partition.conf
     cp ${umount-config} $out/modules/umount.conf
-    cp ${packagechooser-config} $out/modules/packagechooser.conf
+    cp ${desktopmanager-config} $out/modules/desktopmanager.conf
+    cp ${package-config} $out/modules/package.conf
     cp ${branding-desc} $out/branding/nixos/branding.desc
     cp ${./calamares/nixos.png} $out/branding/nixos/nixos.png
     cp ${./calamares/languages.png} $out/branding/nixos/languages.png

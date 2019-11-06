@@ -119,8 +119,8 @@ let
       requiredStorage = 4;
       requiredRam = 2;
       internetCheckUrl = "http://example.com";
-      check = [ "storage" "ram" "power" "internet" "root" "screen" ];
-      required = [ "storage" "ram" "internet" "screen" "root" "power" ];
+      check = if development then [] else [ "storage" "ram" "power" "internet" "root" "screen" ];
+      required = if development then [] else [ "storage" "ram" "internet" "screen" "root" "power" ];
     };
   });
 
@@ -177,66 +177,32 @@ let
         screenshot = ":/images/no-selection.png";
       }
       {
-        id = "";
-        package = "deepin";
-        name = "Deepin";
-        description = "";
-        screenshot = ":/images/no-selection.png";
-      }
-      {
-        id = "kde";
-        package = "kde";
-        name = "Plasma";
+        id = "gnome";
+        package = "gnome";
+        name = "Gnome";
         description = ''
-          KDE Plasma Desktop, simple by default, a clean work area for real-world usage which intends to stay out of your way. Plasma is powerful when needed, enabling the user to create the workflow that makes them more effective to complete their tasks.
-                '';
-        screenshot = ":/images/kde.png";
-      }
-      {
-        id = "xfce";
-        package = "xfce";
-        name = "XFCE";
-        description = ''
-          Xfce is a lightweight desktop environment for UNIX-like operating
-          systems. It aims to be fast and low on system resources, while still
-          being visually appealing and user friendly.
+          An easy and elegant way to use your computer, GNOME is designed to put
+          you in control and get things done.
         '';
-        screenshot = ":/images/xfce.png";
+        screenshot = ./calamares/gnome.png;
       }
       {
-        id = "mate";
-        package = "mate";
-        name = "MATE";
+        id = "i3";
+        package = "i3";
+        name = "i3";
         description = ''
-          The MATE Desktop Environment is the continuation of GNOME 2. It
-          provides an intuitive and attractive desktop environment using
-          traditional metaphors for Linux and other Unix-like operating systems.
+          i3 is a tiling window manager designed for X11, inspired by wmii. It
+          supports tiling, stacking, and tabbing layouts, which it handles
+          dynamically. Configuration is achieved via plain text file and
+          extending i3 is possible using its Unix domain socket and JSON based
+          IPC interface from many programming languages.
+
+          i3 uses a control system very similar to vi. By default, window focus
+          is controlled by the 'Mod1' (Alt key/Win key) plus the right hand home
+          row keys (Mod1+J,K,L,;), while window movement is controlled by the
+          addition of the Shift key (Mod1+Shift+J,K,L,;).
         '';
-        screenshot = ":/images/kde.png";
-      }
-      {
-        id = "xmoand";
-        package = "xmonad";
-        name = "xmonad";
-        description = ''
-          Xmonad is a dynamically tiling X11 window manager that is written and
-          configured in Haskell. In a normal WM, you spend half your time
-          aligning and searching for windows. xmonad makes work easier, by
-          automating this.
-        '';
-        screenshot = ":/images/kde.png";
-      }
-      {
-        id = "twm";
-        package = "twm";
-        name = "TWM";
-        description = ''
-          Twm (Tab Window Manager, or sometimes Tom's Window Manager, after the principal
-          author Tom LaStrange) provides titlebars, shaped windows, several forms of icon
-          management, user-defined macro functions, click-to-type and pointer-driven
-          keyboard focus, and user-specified key and pointer button bindings.
-        '';
-        screenshot = ":/images/kde.png";
+        screenshot = ./calamares/i3.png;
       }
       {
         id = "icewm";
@@ -256,25 +222,65 @@ let
           manager with transparency support, a simple session manager and a
           system tray.
         '';
-        screenshot = ":/images/kde.png";
+        screenshot = ./calamares/icewm.png;
       }
       {
-        id = "i3";
-        package = "i3";
-        name = "i3";
+        id = "kde";
+        package = "kde";
+        name = "Plasma";
         description = ''
-          i3 is a tiling window manager designed for X11, inspired by wmii. It
-          supports tiling, stacking, and tabbing layouts, which it handles
-          dynamically. Configuration is achieved via plain text file and
-          extending i3 is possible using its Unix domain socket and JSON based
-          IPC interface from many programming languages.
-
-          i3 uses a control system very similar to vi. By default, window focus
-          is controlled by the 'Mod1' (Alt key/Win key) plus the right hand home
-          row keys (Mod1+J,K,L,;), while window movement is controlled by the
-          addition of the Shift key (Mod1+Shift+J,K,L,;).
+          KDE Plasma Desktop, simple by default, a clean work area for
+          real-world usage which intends to stay out of your way. Plasma is
+          powerful when needed, enabling the user to create the workflow that
+          makes them more effective to complete their tasks.
         '';
-        screenshot = ":/images/kde.png";
+        screenshot = ./calamares/plasma.png;
+      }
+      {
+        id = "mate";
+        package = "mate";
+        name = "MATE";
+        description = ''
+          The MATE Desktop Environment is the continuation of GNOME 2. It
+          provides an intuitive and attractive desktop environment using
+          traditional metaphors for Linux and other Unix-like operating systems.
+        '';
+        screenshot = ./calamares/mate.png;
+      }
+      {
+        id = "twm";
+        package = "twm";
+        name = "TWM";
+        description = ''
+          Twm (Tab Window Manager, or sometimes Tom's Window Manager, after the principal
+          author Tom LaStrange) provides titlebars, shaped windows, several forms of icon
+          management, user-defined macro functions, click-to-type and pointer-driven
+          keyboard focus, and user-specified key and pointer button bindings.
+        '';
+        screenshot = ./calamares/twm.png;
+      }
+      {
+        id = "xfce";
+        package = "xfce";
+        name = "XFCE";
+        description = ''
+          Xfce is a lightweight desktop environment for UNIX-like operating
+          systems. It aims to be fast and low on system resources, while still
+          being visually appealing and user friendly.
+        '';
+        screenshot = ./calamares/xfce.png;
+      }
+      {
+        id = "xmoand";
+        package = "xmonad";
+        name = "xmonad";
+        description = ''
+          Xmonad is a dynamically tiling X11 window manager that is written and
+          configured in Haskell. In a normal WM, you spend half your time
+          aligning and searching for windows. xmonad makes work easier, by
+          automating this.
+        '';
+        screenshot = ./calamares/xmonad.png;
       }
     ];
   });

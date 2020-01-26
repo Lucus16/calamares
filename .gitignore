@@ -50,3 +50,6 @@ CMakeLists.txt.user
 
 # Kate
 *.kate-swp
+
+# Qemu
+*.qcow2

@@ -29,15 +29,18 @@ them into the configuration file in the target system,
 and then runs the necessary NixOS specific tools.
 """
 
+from string import Template
 from textwrap import dedent
 from time import gmtime, strftime, sleep
-from string import Template
 import json
 import libcalamares
 import os
 import pathlib
+import pprint
 import shutil
 import subprocess
+
+pp = pprint.PrettyPrinter(depth=6)
 
 import gettext
 _ = gettext.translation(
@@ -75,12 +78,31 @@ def run():
 
     libcalamares.utils.debug("Write nixos configuration.")
 
+    defaultPassword = libcalamares.utils.obscure("foo")
+    defaults = {
+        "bootLoader": {
+            "installPath": "/"
+        },
+        "localeConf": {
+            "LANG": "en_US.UTF-8"
+        },
+        "password": defaultPassword,
+        "rootPassword": defaultPassword,
+    }
+
+    for key, value in defaults.items():
+        if gs.value(key) == None:
+            gs.insert(key, value)
+
     store = {}
 
     for key in gs.keys():
         value = gs.value(key)
         libcalamares.utils.debug("{} => {}\n".format(str(key), str(value)))
         store[str(key)] = str(value)
+
+    configuration_nix(gs)
+    return
 
     root = store["rootMountPoint"]
 
@@ -121,73 +143,107 @@ def run():
     return None
 
 
+config_template = '''
+{ config, pkgs, ... }: {
+    imports = [
+        ./hardware-configuration.nix
+    ];
+
+    boot.loader.grub.enable = true;
+    boot.loader.grub.version = 2;
+    boot.loader.grub.device = ${grub_device};
+
+    networking.hostName = ${hostname};
+    networking.useDHCP = false;
+    networking.interfaces.eth0.useDHCP = true;
+    i18n = {
+        consoleFont = "Lat2-Terminus16";
+        consoleKeyMap = ${console_key_map};
+        defaultLocale = ${default_locale};
+    };
+
+    time.timeZone = ${timezone};
+
+    environment.systemPackages = with pkgs; [
+        wget
+        vim
+    ];
+
+    sound.enable = true;
+    hardware.pulseaudio.enable = true;
+
+    services.xserver = {
+        enable = ${enable_x};
+        desktopManager.xterm.enable = false;
+        ${desktopmanager}
+    };
+
+    users.users.${user} = {
+        isNormalUser = true;
+        extraGroups = [ "wheel" ];
+        initialHashedPassword = ${hashed_pass};
+    };
+
+    users.users.root.initialHashedPassword = ${hashed_root_pass};
+
+    system.stateVersion = "19.09";
+}
+'''
+
+
 def configuration_nix(gs):
-    s = Template(
-        dedent('''
-        { config, pkgs, ... }: {
-            imports = [
-                ./hardware-configuration.nix
-            ];
+    tmpl = Template(dedent(config_template))
+    unformatted = tmpl.substitute(**template_vars(gs))
+    print(unformatted)
+    print(nixfmt( unformatted ))
+    return nixfmt(unformatted)
 
-            boot.loader.grub.enable = true;
-            boot.loader.grub.version = 2;
-            boot.loader.grub.device = "${grub_device}";
 
-            networking.hostName = "${hostname}";
-            networking.useDHCP = false;
-            networking.interfaces.eth0.useDHCP = true;
-            i18n = {
-                consoleFont = "Lat2-Terminus16";
-                consoleKeyMap = "${console_key_map}";
-                defaultLocale = "${default_locale}";
-            };
+def template_vars(gs):
+    desktopmanager = gs.value("packagechooser_desktopmanager")
+    pp.pprint({"dm": desktopmanager})
+    if desktopmanager != "":
+        desktopmanager = "{}.enable = true;".format(desktopmanager)
 
-            time.timeZone = "${region}/${zone}";
+    return {
+        "timezone": to_nix(timezone(gs)),
+        "grub_device": to_nix(gs.value("bootLoader")["installPath"]),
+        "hostname": to_nix(gs.value("hostname")),
+        "console_key_map": to_nix(gs.value("keyboardLayout")),
+        "default_locale": to_nix(gs.value("localeConf")["LANG"]),
+        "hashed_pass": to_nix(password_hash(gs.value("password"))),
+        "hashed_root_pass": to_nix(password_hash(gs.value("rootPassword"))),
+        "user": to_nix(gs.value("username")),
+        "desktopmanager": desktopmanager,
+        "enable_x": to_nix(desktopmanager != "")
+    }
 
-            environment.systemPackages = with pkgs; [
-                wget
-                vim
-            ];
 
-            sound.enable = true;
-            hardware.pulseaudio.enable = true;
+def timezone(gs):
+    region = gs.value("locationRegion")
+    zone = gs.value("locationZone")
+    return "{}/{}".format(region, zone)
 
-            services.xserver = {
-              enable = ${enable_x};
-              desktopManager.xterm.enable = false;
-              desktopManager.plasma5.enable = ${enable_plasma5};
-              desktopManager.xfce.enable = ${enable_xfce};
-              desktopManager.gnome3.enable = ${enable_gnome3};
-              desktopManager.mate.enable = ${enable_mate};
-              windowManager.xmonad.enable = ${enable_xmonad};
-              windowManager.twm.enable = ${enable_twm};
-              windowManager.icewm.enable = ${enable_icewm};
-              windowManager.i3.enable = ${enable_i3};
-            };
 
-            users.users.${user} = {
-                isNormalUser = true;
-                extraGroups = [ "wheel" ];
-                initialHashedPassword = "${hashed_pass}";
-            };
+def to_nix(v):
+    t = type(v)
+    if t is bool:
+        if t: return "true"
+        else: return "false"
+    elif v is None:
+        return "null"
+    elif t is str:
+        return "\"{}\"".format(v)
+    else:
+        print("unknown type {}".format(t))
 
-            users.users.root.initialHashedPassword = "${hashed_root_pass}";
 
-            system.stateVersion = "19.09";
-        }
-        '''))
-
-    return s.substitute(
-        grub_device=gs.value("bootLoader")["installPath"],
-        hostname=gs.value("hostname"),
-        console_key_map=gs.value("keyboardLayout"),
-        default_locale=gs.value("localeConf")["LANG"],
-        region=gs.value("locationRegion"),
-        zone=gs.value("locationZone"),
-        hashed_pass=password_hash(gs.value("password")),
-        hashed_root_pass=password_hash(gs.value("rootPassword")),
-        user=gs.value("username")
-    )
+def nixfmt(v):
+    return subprocess.run(["nixfmt"],
+                          input=v,
+                          encoding='ascii',
+                          check=True,
+                          stdout=subprocess.PIPE).stdout.strip()
 
 
 def password_hash(pw):

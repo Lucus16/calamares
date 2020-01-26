@@ -1,4 +1,7 @@
-{ pkgs, config, lib, ... }: {
+{ pkgs, config, lib, ... }:
+let
+  calamares = (import ./. {}).packages.calamaresWithConfig { development = false; };
+in {
   networking.hostName = "nixos-installer";
 
   users = {
@@ -33,9 +36,7 @@
   ];
 
   services.nscd.enable = false;
-  boot.extraTTYs = [
-    "tty2"
-  ];
+  boot.extraTTYs = [ "tty1" "tty2" "tty3" ];
 
   environment.pathsToLink = [ "/libexec" ];
 

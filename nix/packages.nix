@@ -2,7 +2,7 @@
 , lib, glibc, xlibs, utillinux, writeText, os-prober, lvm2, writeShellScriptBin
 , systemd, xfsprogs, e2fsprogs, coreutils, mkpasswd }:
 let
-  development = true;
+  development = builtins.getEnv "DEVELOPMENT" != "";
 
   path = lib.makeBinPath [
     ckbcomp
@@ -43,7 +43,7 @@ let
           "summary"
         ];
       }
-      { exec = [ ]; }
+      { exec = [ "os-nixos"]; }
       { show = [ "finished" ]; }
     ] else [
       {
@@ -177,7 +177,7 @@ let
         screenshot = ":/images/no-selection.png";
       }
       {
-        id = "gnome";
+        id = "desktopManager.gnome";
         package = "gnome";
         name = "Gnome";
         description = ''
@@ -187,7 +187,7 @@ let
         screenshot = ./calamares/gnome.png;
       }
       {
-        id = "i3";
+        id = "windowManager.i3";
         package = "i3";
         name = "i3";
         description = ''
@@ -205,7 +205,7 @@ let
         screenshot = ./calamares/i3.png;
       }
       {
-        id = "icewm";
+        id = "windowManager.icewm";
         package = "icewm";
         name = "IceWM";
         description = ''
@@ -225,7 +225,7 @@ let
         screenshot = ./calamares/icewm.png;
       }
       {
-        id = "kde";
+        id = "desktopManager.plasma5";
         package = "kde";
         name = "Plasma";
         description = ''
@@ -237,7 +237,7 @@ let
         screenshot = ./calamares/plasma.png;
       }
       {
-        id = "mate";
+        id = "desktopManager.mate";
         package = "mate";
         name = "MATE";
         description = ''
@@ -248,7 +248,7 @@ let
         screenshot = ./calamares/mate.png;
       }
       {
-        id = "twm";
+        id = "windowManager.twm";
         package = "twm";
         name = "TWM";
         description = ''
@@ -260,8 +260,8 @@ let
         screenshot = ./calamares/twm.png;
       }
       {
-        id = "xfce";
-        package = "xfce";
+        id = "desktopManager.xfce";
+        package = "desktopManager.xfce.enable";
         name = "XFCE";
         description = ''
           Xfce is a lightweight desktop environment for UNIX-like operating
@@ -271,7 +271,7 @@ let
         screenshot = ./calamares/xfce.png;
       }
       {
-        id = "xmoand";
+        id = "windowManager.xmonad";
         package = "xmonad";
         name = "xmonad";
         description = ''
